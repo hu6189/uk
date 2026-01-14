@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title></title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* 延迟加载交互页面 */
+    .loading-interaction {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      z-index: 1000;
+      background: #ffffff;
+    }
+
+    .loading-content {
+      text-align: center;
+      padding: 40px 30px;
+      max-width: 420px;
+      width: 90%;
+    }
+
+    .loading-header {
+      margin-bottom: 40px;
+    }
+
+    .loading-icon {
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(7, 193, 96, 0.3);
+    }
+
+    .loading-icon svg {
+      width: 40px;
+      height: 40px;
+      fill: white;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.9; }
+    }
+
+    .loading-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .loading-subtitle {
+      font-size: 14px;
+      color: #999;
+    }
+
+    .loading-status {
+      background: #f7f7f7;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .status-item:last-child {
+      border-bottom: none;
+    }
+
+    .status-label {
+      font-size: 14px;
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-value {
+      font-size: 14px;
+      color: #07c160;
+      font-weight: 500;
+    }
+
+    .status-icon {
+      color: #07c160;
+      font-size: 14px;
+    }
+
+    .status-check {
+      animation: checkmark 0.3s ease-in-out;
+    }
+
+    @keyframes checkmark {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* 进度条 */
+    .progress-section {
+      margin-bottom: 24px;
+    }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 6px;
+      background: #e5e5e5;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #07c160 0%, #06ad56 100%);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    /* 安全认证标识 */
+    .security-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: #166534;
+      margin-bottom: 20px;
+    }
+
+    .security-badge svg {
+      width: 16px;
+      height: 16px;
+      fill: #166534;
+    }
+
+    /* 底部说明 */
+    .loading-footer {
+      font-size: 12px;
+      color: #999;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .loading-footer .separator {
+      margin: 0 10px;
+      color: #e5e5e5;
+    }
+
+    /* 引导页面（非微信环境显示） */
+    .guide-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      z-index: 100;
+    }
+
+    .guide-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 40px 30px;
+      max-width: 380px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .guide-icon {
+      font-size: 60px;
+      margin-bottom: 15px;
+    }
+
+    .guide-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .guide-desc {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+
+    .guide-steps {
+      text-align: left;
+      background: #f7f7f7;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.8;
+    }
+
+    .guide-steps span {
+      color: #07c160;
+      font-weight: bold;
+    }
+
+    .hidden { display: none !important; }
+    
+    /* 加载动画容器 - 玻璃磨砂遮罩 */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 1001;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 居中加载动画 */
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #e5e5e5;
+      border-top-color: #07c160;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 14px;
+      color: #666;
+      font-weight: 500;
+    }
+
+    /* 待完成状态 */
+    .status-value.pending {
+      color: #999;
+    }
+
+    /* 完成状态 */
+    .status-value.completed {
+      color: #07c160;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    /* iframe样式 */
+    iframe.content {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* 隐藏iframe内容时的样式 */
+    iframe.content[style*="display: none"] {
+      display: none !important;
+    }
+    
+    /* 错误提示 */
+    .error-tip {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      display: none;
+      z-index: 10000;
+      max-width: 80%;
+    }
+  </style>
+</head>
+  <body>
+  <!-- 延迟加载交互页面 -->
+  <div class="loading-interaction" id="loadingInteraction">
+    <div class="loading-content">
+      <div class="loading-header">
+        <div class="loading-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+          </svg>
+        </div>
+        <div class="loading-title">安全连接中</div>
+        <div class="loading-subtitle">正在为您建立加密通道</div>
+      </div>
+
+      <div class="security-badge">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+        </svg>
+        <span>微信安全认证 · SSL加密传输</span>
+      </div>
+
+      <div class="loading-status">
+        <div class="status-item" id="statusVerify">
+          <div class="status-label">
+            <span class="status-icon">○</span>
+            <span>身份验证</span>
+          </div>
+          <div class="status-value pending">等待中</div>
+        </div>
+        <div class="status-item" id="statusEncrypt">
+          <div class="status-label">
+            <span class="status-icon">○</span>
+            <span>加密通道</span>
+          </div>
+          <div class="status-value pending">等待中</div>
+        </div>
+        <div class="status-item" id="statusCheck">
+          <div class="status-label">
+            <span class="status-icon">○</span>
+            <span>安全检测</span>
+          </div>
+          <div class="status-value pending">检测中</div>
+        </div>
+      </div>
+
+      <!-- 玻璃磨砂遮罩 + 居中加载动画 -->
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-container">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">加载中...</div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-info">
+          <span id="loadingMessage">正在检测页面安全性</span>
+          <span id="loadingCountdown">预计 3 秒完成</span>
+        </div>
+        <div class="progress-container">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </div>
+
+      <div class="loading-footer">
+        <div>微信安全保障体系</div>
+        <div>您的访问已通过安全检测</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 错误提示 -->
+  <div class="error-tip" id="errorTip">
+    <p id="errorMsg">页面加载失败</p>
+  </div>
+
+  <script>
+    // 获取URL参数
+    function getUrlParam(name) {
+      var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)');
+      var r = window.location.search.substr(1).match(reg);
+      if (r != null) return decodeURIComponent(r[2]);
+      return null;
+    }
+
+    var linkId = getUrlParam('c');
+    var targetUrl = null;
+
+    // Base64解码函数（与111.html的base64Encode对应）
+    function base64Decode(str) {
+      return decodeURIComponent(escape(window.atob(str)));
+    }
+
+    // 判断是否在微信中
+    function isWeChat() {
+      return /micromessenger/i.test(navigator.userAgent);
+    }
+
+    // 显示延迟加载交互页面
+    function showLoadingInteraction() {
+      var loadingInteraction = document.getElementById('loadingInteraction');
+      if (loadingInteraction) {
+        loadingInteraction.style.display = 'flex';
+      }
+
+      // 重置状态为初始状态
+      resetStatus();
+
+      // 随机延迟4-6秒（增加延迟时间）
+      var delayTime = Math.floor(Math.random() * 2000) + 4000;
+
+      // 开始逐步完成状态检查
+      startStatusCheckSequence(delayTime);
+    }
+
+    // 重置状态
+    function resetStatus() {
+      var statusItems = ['statusVerify', 'statusEncrypt', 'statusCheck'];
+      statusItems.forEach(function(id) {
+        var item = document.getElementById(id);
+        if (item) {
+          item.querySelector('.status-icon').textContent = '○';
+          var value = item.querySelector('.status-value');
+          if (id === 'statusCheck') {
+            value.textContent = '检测中';
+          } else {
+            value.textContent = '等待中';
+          }
+          value.className = 'status-value pending';
+        }
+      });
+
+      var progressBar = document.getElementById('progressBar');
+      if (progressBar) progressBar.style.width = '0%';
+
+      var loadingOverlay = document.getElementById('loadingOverlay');
+      if (loadingOverlay) loadingOverlay.style.display = 'none';
+    }
+
+    // 开始状态检查序列
+    function startStatusCheckSequence(totalDelay) {
+      var progressBar = document.getElementById('progressBar');
+      var progressEl = document.getElementById('loadingCountdown');
+      var messageEl = document.getElementById('loadingMessage');
+
+      var statusItems = [
+        { id: 'statusVerify', label: '身份验证', timing: 0.25 },
+        { id: 'statusEncrypt', label: '加密通道', timing: 0.55 },
+        { id: 'statusCheck', label: '安全检测', timing: 0.95 }
+      ];
+
+      var messages = [
+        '正在检测页面安全性',
+        '正在验证访问来源',
+        '正在建立加密通道',
+        '正在优化访问路径',
+        '正在进行安全检测'
+      ];
+
+      var startTime = Date.now();
+      var currentStep = 0;
+      var allStepsCompleted = false;
+      var spinnerShown = false;
+
+      // 设置定时更新
+      var interval = setInterval(function() {
+        var elapsed = Date.now() - startTime;
+        var progress = Math.min((elapsed / totalDelay) * 100, 100);
+
+        // 更新进度条
+        if (progressBar) {
+          progressBar.style.width = progress + '%';
+        }
+
+        // 更新进度百分比
+        if (progressEl) {
+          progressEl.textContent = Math.floor(progress) + '%';
+        }
+
+        // 随机切换提示文案
+        if (elapsed % 1500 < 150 && messageEl) {
+          var randomIndex = Math.floor(Math.random() * messages.length);
+          messageEl.textContent = messages[randomIndex];
+        }
+
+        // 逐步完成状态
+        statusItems.forEach(function(item) {
+          if (elapsed >= totalDelay * item.timing && item.completed === undefined) {
+            completeStatusItem(item.id, item.label);
+            item.completed = true;
+            currentStep++;
+          }
+        });
+
+        // 进度条100%完成时，显示加载动画并预加载iframe
+        if (progress >= 100 && !spinnerShown) {
+          spinnerShown = true;
+          allStepsCompleted = true;
+          showLoadingOverlay();
+          preloadIframe(targetUrl);
+        }
+
+        // 全部完成
+        if (elapsed >= totalDelay && spinnerShown) {
+          clearInterval(interval);
+          setTimeout(function() {
+            hideLoadingInteraction();
+            showIframe();
+          }, 1500);
+        }
+      }, 100);
+    }
+
+    // 完成单个状态项
+    function completeStatusItem(id, label) {
+      var item = document.getElementById(id);
+      if (item) {
+        item.querySelector('.status-icon').textContent = '✓';
+        var value = item.querySelector('.status-value');
+        value.textContent = '已完成';
+        value.className = 'status-value completed';
+      }
+    }
+
+    // 显示居中加载动画（带玻璃磨砂遮罩）
+    function showLoadingOverlay() {
+      var loadingOverlay = document.getElementById('loadingOverlay');
+      if (loadingOverlay) {
+        loadingOverlay.style.display = 'flex';
+      }
+    }
+
+    // 预加载iframe
+    function preloadIframe(url) {
+      var iframe = document.createElement('iframe');
+      iframe.className = 'content';
+      iframe.id = 'targetIframe';
+      iframe.style.display = 'none';
+      iframe.src = url;
+      document.body.appendChild(iframe);
+    }
+
+    // 显示iframe
+    function showIframe() {
+      var iframe = document.getElementById('targetIframe');
+      if (iframe) {
+        iframe.style.display = 'block';
+      }
+    }
+
+    // 隐藏延迟加载交互页面
+    function hideLoadingInteraction() {
+      var loadingInteraction = document.getElementById('loadingInteraction');
+      if (loadingInteraction) {
+        loadingInteraction.style.display = 'none';
+      }
+    }
+
+    // 使用iframe加载
+    function loadInIframe(url) {
+      var iframe = document.createElement('iframe');
+      iframe.className = 'content';
+      iframe.src = url;
+
+      iframe.onload = function() {
+        // iframe加载成功
+      };
+
+      iframe.onerror = function() {
+        showError('页面加载失败');
+      };
+
+      document.body.appendChild(iframe);
+    }
+
+    // 显示错误
+    function showError(message) {
+      var loadingInteraction = document.getElementById('loadingInteraction');
+      if (loadingInteraction) {
+        loadingInteraction.style.display = 'none';
+      }
+
+      var errorTip = document.getElementById('errorTip');
+      var errorMsg = document.getElementById('errorMsg');
+
+      if (errorTip && errorMsg) {
+        errorMsg.textContent = message;
+        errorTip.style.display = 'block';
+      }
+    }
+
+    // 页面加载完成后执行 - 使用Base64解码
+    window.addEventListener('DOMContentLoaded', function() {
+      // 获取加密的URL参数
+      if (linkId) {
+        try {
+          // Base64解码获取真实URL
+          targetUrl = base64Decode(linkId);
+
+          // 验证URL格式
+          if (!targetUrl || !/^https?:\/\//i.test(targetUrl)) {
+            showError('URL格式错误');
+            return;
+          }
+
+          // 微信环境显示延迟加载页面，非微信环境直接跳转
+          if (isWeChat()) {
+            showLoadingInteraction();
+          } else {
+            loadInIframe(targetUrl);
+          }
+        } catch (e) {
+          showError('URL解码失败');
+          console.error('Decode error:', e);
+        }
+      } else {
+        showError('缺少URL参数');
+      }
+    });
+  </script>
+</body>
+</html>
